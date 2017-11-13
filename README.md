@@ -9,7 +9,7 @@ ffmeg must be compiled with libass for subtitle conversion. Not necessary if you
 
 View the stream with VLC or MPV. Requires **flash** to view the stream.
 
-Only tested on OSX. Should work on Linux with no issues. Might work on Windows (particularly the ffmpeg call might break).
+Only tested on OSX. Should work on Linux with no issues. Might work on Windows (particularly the ffmpeg call might break). OBS/VLC would probably be more convenient for Windows users.
 
 OSX (brew) install:
 ```sh
@@ -18,7 +18,7 @@ pip install click, requests
 ```
 
 ## Usage
-```sh
+```
 Usage: spawn.py [OPTIONS] FILENAMEh
 
 Options:
@@ -41,6 +41,7 @@ VM at ip 104.236.62.99 is now active
 Attempt #7/20: Waiting for nginx to finish compiling...
 
 Running command: ffmpeg -re -loglevel warning -i /Users/setr/Downloads/KungFu/Police-Story-3-720p.mkv -c:v libx264 -c:a libmp3lame -filter:v subtitles=/Users/setr/Downloads/KungFu/Police-Story-3-720p.mkv -ar 44100 -ac 1 -f flv rtmp://104.236.62.99/live
+
 The stream is now live at rtmp://104.236.62.99/live
 Enjoy!
 ```
@@ -49,6 +50,7 @@ Enjoy!
 * If you cancel the script early, or something goes wrong, make sure to go to digitalocean.com and destroy the VM yourself (named StreamServer). The script **does not** ensure multiple servers are not created. Each server will cost you $5/monthly if you never close them.
 * ffmpeg will be converting and streaming the video at the same time, in real time. If your computer converts slower than the bitrate of the video, you'll end up with a choppy stream. Consider converting the video beforehand in this case.
 * This uses the RTMP protocol, which communicates with Adobe Flash. Thus, you'll need flash installed to view the stream. 
+* The server is not secure in any fashion and makes no check as to **who** is streaming the video to the server. It also doesn't stop other people from streaming videos through your server. Such malicious users won't really cost you anything, except eating up some of your bandwidth cap. 
 
 
 ## What it does
@@ -79,3 +81,5 @@ Provide instructions for streaming through VLC and Open Broadcast Software
 Optionally start up an HLS/Dash feed instead (or alongside?) RTMP, and I guess a webpage to go with it.
 
 FFMPEG can apparently take a url as input, so we might as well support that too (currently blocked because it checks if video is a valid file)
+
+Only accept streams from ip address that ran this script, or from a list of given IP's.
