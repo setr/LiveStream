@@ -90,14 +90,14 @@ Attempt #1/3: Trying to kill VM with tag f48dff2e-7fb7-49e8-b9bf-2013c9deff90...
 ## What it does
 
 1. Starts up a new Digital Ocean VM on the lowest tier (512MB), and runs deploy.sh 
-* deploy.sh downloads Nginx and the RTMP module, and compiles it on the VM
-* Nginx is used to run an rtmp server, on port 1935 (rtmp default)
+  * deploy.sh downloads Nginx and the RTMP module, and compiles it on the VM
+  * Nginx is used to run an rtmp server, on port 1935 (rtmp default)
 2. Once Nginx is running, the local machine uses ffmpeg to stream the video to rtmp://`ip`/live
-* ffmpeg converts the video to h264, audio to mp3 and burns the subtitles into the output, wrapped in an flv container
-* ffmpeg will be converting and streaming the video at the same time, in real time. If your computer converts slower than the bitrate of the video, you'll end up with a choppy stream. Consider converting the video beforehand in this case.
+  * ffmpeg converts the video to h264, audio to mp3 and burns the subtitles into the output, wrapped in an flv container
+  * ffmpeg will be converting and streaming the video at the same time, in real time. If your computer converts slower than the bitrate of the video, you'll end up with a choppy stream. Consider converting the video beforehand in this case.
 3. The video can then be viewed from the same url rtmp://`ip`/live
 4. When the video finishes, the script will destroy the VM.
-* If you cancel the script early, or something goes wrong, make sure to go to digitalocean.com and destroy the VM yourself (named StreamServer). The script **does not** ensure multiple servers are not created. Each server will cost you $5/monthly if you never close them.
+  * If you cancel the script early, or something goes wrong, make sure to go to digitalocean.com and destroy the VM yourself (named StreamServer). The script **does not** ensure multiple servers are not created. Each server will cost you $5/monthly if you never close them.
 
 This means that you have one input stream, from the local computer to the digital ocean vm, and `n` output streams for `n` viewers. 
 
