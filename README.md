@@ -1,5 +1,5 @@
 # LiveStream
-Host a live stream of a video for shared viewing, for 1 cent an hour, through digital ocean
+Host a live stream of a video for shared syncronized viewing, for 1 cent an hour, through digital ocean
 
 ## Requirements
 Requires python2.7
@@ -10,7 +10,7 @@ Requires an account with digital ocean, and an [API KEY](https://www.digitalocea
 
 ffmeg must be compiled with libass for subtitle conversion. Not necessary if you don't want subs.
 
-View the stream with [VLC](https://www.videolan.org/vlc/index.html) or MPV. Requires **flash** to view the stream.
+View the stream with [VLC](https://www.videolan.org/vlc/index.html) or [MPV](https://mpv.io/). Requires **flash** to view the stream.
 
 Only tested on OSX. Should work on any Linux box with no issues. 
 
@@ -26,7 +26,7 @@ Only tested on OSX. Should work on Linux with no issues. Might work on Windows (
 OSX (brew) install:
 ```sh
 brew install ffmpeg --with-libass # this will take like 30 min
-pip install click, requests
+pip install click requests
 git clone https://github.com/setr/LiveStream.git
 
 cd LiveStream
