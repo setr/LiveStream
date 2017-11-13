@@ -15,6 +15,10 @@ OSX (brew) install:
 ```sh
 brew install ffmpeg --with-libass # this will take like 30 min
 pip install click, requests
+git clone https://github.com/setr/LiveStream.git
+
+cd LiveStream
+python spawn.py --help
 ```
 
 ## Usage
@@ -27,7 +31,7 @@ Options:
   --subs           Whether or not subtitles are encoded in the movie. If they
                    are, they'll be burned into the stream
   --snapshot TEXT  Name of snapshot image to use instead of creating a brand
-                   new VM
+                   new VM [ NOT IMPLEMENTED ]
   --help           Show this message and exit.
 ```
 
@@ -50,8 +54,7 @@ Enjoy!
 * If you cancel the script early, or something goes wrong, make sure to go to digitalocean.com and destroy the VM yourself (named StreamServer). The script **does not** ensure multiple servers are not created. Each server will cost you $5/monthly if you never close them.
 * ffmpeg will be converting and streaming the video at the same time, in real time. If your computer converts slower than the bitrate of the video, you'll end up with a choppy stream. Consider converting the video beforehand in this case.
 * This uses the RTMP protocol, which communicates with Adobe Flash. Thus, you'll need flash installed to view the stream. 
-* The server is not secure in any fashion and makes no check as to **who** is streaming the video to the server. It also doesn't stop other people from streaming videos through your server. Such malicious users won't really cost you anything, except eating up some of your bandwidth cap. 
-
+* The server is not secure in any fashion and makes no check as to **who** is streaming the video to the server. It also doesn't stop other people from streaming videos through your server. Such malicious users won't really cost you anything, except eating up some of your bandwidth cap.
 
 ## What it does
 
@@ -83,3 +86,5 @@ Optionally start up an HLS/Dash feed instead (or alongside?) RTMP, and I guess a
 FFMPEG can apparently take a url as input, so we might as well support that too (currently blocked because it checks if video is a valid file)
 
 Only accept streams from ip address that ran this script, or from a list of given IP's.
+
+Maybe maintain a pre-compiled version of Nginx in this repo, to speed up deployment. 
