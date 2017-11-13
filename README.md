@@ -1,6 +1,7 @@
 # LiveStream
 Host a live stream of a video for shared viewing, for 1 cent an hour, through digital ocean
 
+## Requirements
 Requires python2.7
 
 Requires ffmpeg if you want the script to stream for you (The `play` command). Otherwise, [VLC](https://www.videolan.org/vlc/index.html) or [OBS](https://obsproject.com/) can be used instead (use `start_server` and `destroy_server` instead), though I've never personally tried them.
@@ -12,6 +13,8 @@ ffmeg must be compiled with libass for subtitle conversion. Not necessary if you
 View the stream with [VLC](https://www.videolan.org/vlc/index.html) or MPV. Requires **flash** to view the stream.
 
 Only tested on OSX. Should work on any Linux box with no issues. 
+
+### Windows
 
 Windows is untested, but `start_server` and `destroy_server` subcommands **should** work with no issues. The `play` subcommand may not. 
 
@@ -44,20 +47,28 @@ Options:
   --help           Show this message and exit.
 ```
 
-Example:
+Examples:
 
 Start the Server, stream the movie, stop the server
 ```
 $ python spawn.py play --subs ~/Downloads/KungFu/Police-Story-3-720p.mkv
 
+test% python spawn.py play --subs ~/Downloads/KungFu/Legend-of-the-Drunken-Master_720p.mkv
 Attempt #1/3: Starting up the VM...
-VM at ip 104.236.62.99 is now active
-
+VM at ip 45.55.141.12 is now active
+Attempt #1/20: Waiting for nginx to finish compiling...
+Attempt #2/20: Waiting for nginx to finish compiling...
+Attempt #3/20: Waiting for nginx to finish compiling...
+Attempt #4/20: Waiting for nginx to finish compiling...
+Attempt #5/20: Waiting for nginx to finish compiling...
+Attempt #6/20: Waiting for nginx to finish compiling...
 Attempt #7/20: Waiting for nginx to finish compiling...
+Attempt #8/20: Waiting for nginx to finish compiling...
+Attempt #9/20: Waiting for nginx to finish compiling...
 
-Running command: ffmpeg -re -loglevel warning -i /Users/setr/Downloads/KungFu/Police-Story-3-720p.mkv -c:v libx264 -c:a libmp3lame -filter:v subtitles=/Users/setr/Downloads/KungFu/Police-Story-3-720p.mkv -ar 44100 -ac 1 -f flv rtmp://104.236.62.99/live
+Running command: ffmpeg -re -loglevel warning -i /Users/setr/Downloads/KungFu/Legend-of-the-Drunken-Master_720p.mkv -c:v libx264 -c:a libmp3lame -filter:v subtitles=/Users/setr/Downloads/KungFu/Legend-of-the-Drunken-Master_720p.mkv -ar 44100 -ac 1 -f flv rtmp://45.55.141.12/live
 
-The stream is now live at rtmp://104.236.62.99/live
+The stream is now live at rtmp://45.55.141.12/live
 Enjoy!
 ```
 
@@ -67,7 +78,6 @@ $ python spawn.py start_server
 
 Starting server
 VM at ip 104.236.192.177 is now active
-104.236.192.177
 Attempt #7/20: Waiting for nginx to finish compiling...
 Server is ready! Point an RTMP stream at rtmp://104.236.192.177/live
 ```
