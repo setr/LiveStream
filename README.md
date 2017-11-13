@@ -17,16 +17,22 @@ Windows is untested, but `start_server` and `destroy_server` subcommands **shoul
 
 If it doesn't, run start_server to deploy the server, then use VLC or OBS to create an RTMP stream pointed at the provided url. Just make sure to call destroy_server when you're done.
 
+Only tested on OSX. Should work on Linux with no issues. Might work on Windows (particularly the ffmpeg call might break). OBS/VLC would probably be more convenient for Windows users.
+
 ## Install
 OSX (brew) install:
 ```sh
 brew install ffmpeg --with-libass # this will take like 30 min
 pip install click, requests
+git clone https://github.com/setr/LiveStream.git
+
+cd LiveStream
+python spawn.py --help
 ```
 
 ## Usage
-```sh
-Usage: spawn.py play [OPTIONS] FILENAME
+```
+Usage: spawn.py [OPTIONS] FILENAMEh
 
 Options:
   --api-key TEXT   Digital Ocean API key; if not provided on CLI, it must be
@@ -34,7 +40,7 @@ Options:
   --subs           Whether or not subtitles are encoded in the movie. If they
                    are, they'll be burned into the stream
   --snapshot TEXT  Name of snapshot image to use instead of creating a brand
-                   new VM
+                   new VM [ NOT IMPLEMENTED ]
   --help           Show this message and exit.
 ```
 
@@ -50,6 +56,7 @@ VM at ip 104.236.62.99 is now active
 Attempt #7/20: Waiting for nginx to finish compiling...
 
 Running command: ffmpeg -re -loglevel warning -i /Users/setr/Downloads/KungFu/Police-Story-3-720p.mkv -c:v libx264 -c:a libmp3lame -filter:v subtitles=/Users/setr/Downloads/KungFu/Police-Story-3-720p.mkv -ar 44100 -ac 1 -f flv rtmp://104.236.62.99/live
+
 The stream is now live at rtmp://104.236.62.99/live
 Enjoy!
 ```
@@ -78,7 +85,7 @@ Attempt #1/3: Trying to kill VM with tag f48dff2e-7fb7-49e8-b9bf-2013c9deff90...
 * If you cancel the script early, or something goes wrong, make sure to go to digitalocean.com and destroy the VM yourself (named StreamServer). The script **does not** ensure multiple servers are not created. Each server will cost you $5/monthly if you never close them.
 * ffmpeg will be converting and streaming the video at the same time, in real time. If your computer converts slower than the bitrate of the video, you'll end up with a choppy stream. Consider converting the video beforehand in this case.
 * This uses the RTMP protocol, which communicates with Adobe Flash. Thus, you'll need flash installed to view the stream. 
-
+* The server is not secure in any fashion and makes no check as to **who** is streaming the video to the server. It also doesn't stop other people from streaming videos through your server. Such malicious users won't really cost you anything, except eating up some of your bandwidth cap.
 
 ## What it does
 
@@ -106,6 +113,10 @@ Provide instructions for streaming through [VLC](https://www.videolan.org/vlc/in
 Optionally start up an HLS/Dash feed instead (or alongside?) RTMP, and I guess a webpage to go with it.
 
 FFMPEG can apparently take a url as input, so we might as well support that too (currently blocked because it checks if video is a valid file)
+
+Only accept streams from ip address that ran this script, or from a list of given IP's.
+
+Maybe maintain a pre-compiled version of Nginx in this repo, to speed up deployment. 
 
 Make the script installable.
 
