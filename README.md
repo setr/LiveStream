@@ -1,16 +1,23 @@
 # LiveStream
 Host a live stream of a video for shared viewing, for 1 cent an hour, through digital ocean
 
-Requires ffmpeg and python2.7
+Requires python2.7
+
+Requires ffmpeg if you want the script to stream for you (The `play` command). Otherwise, [VLC](https://www.videolan.org/vlc/index.html) or [OBS](https://obsproject.com/) can be used instead (use `start_server` and `destroy_server` instead), though I've never personally tried them.
 
 Requires an account with digital ocean, and an [API KEY](https://www.digitalocean.com/community/tutorials/how-to-use-the-digitalocean-api-v2)
 
 ffmeg must be compiled with libass for subtitle conversion. Not necessary if you don't want subs.
 
-View the stream with VLC or MPV. Requires **flash** to view the stream.
+View the stream with [VLC](https://www.videolan.org/vlc/index.html) or MPV. Requires **flash** to view the stream.
 
-Only tested on OSX. Should work on Linux with no issues. Might work on Windows (particularly the ffmpeg call might break).
+Only tested on OSX. Should work on any Linux box with no issues. 
 
+Windows is untested, but `start_server` and `destroy_server` subcommands **should** work with no issues. The `play` subcommand may not. 
+
+If it doesn't, run start_server to deploy the server, then use VLC or OBS to create an RTMP stream pointed at the provided url. Just make sure to call destroy_server when you're done.
+
+## Install
 OSX (brew) install:
 ```sh
 brew install ffmpeg --with-libass # this will take like 30 min
@@ -19,7 +26,7 @@ pip install click, requests
 
 ## Usage
 ```sh
-Usage: spawn.py [OPTIONS] FILENAMEh
+Usage: spawn.py play [OPTIONS] FILENAME
 
 Options:
   --api-key TEXT   Digital Ocean API key; if not provided on CLI, it must be
@@ -31,9 +38,11 @@ Options:
   --help           Show this message and exit.
 ```
 
-Example Usage:
+Example:
+
+Start the Server, stream the movie, stop the server
 ```
-python spawn.py --subs ~/Downloads/KungFu/Police-Story-3-720p.mkv
+$ python spawn.py play --subs ~/Downloads/KungFu/Police-Story-3-720p.mkv
 
 Attempt #1/3: Starting up the VM...
 VM at ip 104.236.62.99 is now active
@@ -44,6 +53,26 @@ Running command: ffmpeg -re -loglevel warning -i /Users/setr/Downloads/KungFu/Po
 The stream is now live at rtmp://104.236.62.99/live
 Enjoy!
 ```
+
+Start the server and set it up for streaming, but don't stream anything
+```
+$ python spawn.py start_server
+
+Starting server
+VM at ip 104.236.192.177 is now active
+104.236.192.177
+Attempt #7/20: Waiting for nginx to finish compiling...
+Server is ready! Point an RTMP stream at rtmp://104.236.192.177/live
+```
+
+Destroy any running servers created by this script
+```
+$ python spawn.py destroy_server
+
+Attempt #1/3: Trying to kill VM with tag f48dff2e-7fb7-49e8-b9bf-2013c9deff90...
+```
+
+
 
 ## Important Notes
 * If you cancel the script early, or something goes wrong, make sure to go to digitalocean.com and destroy the VM yourself (named StreamServer). The script **does not** ensure multiple servers are not created. Each server will cost you $5/monthly if you never close them.
@@ -72,10 +101,12 @@ Digital Ocean has a limit of 1 Terabyte of network traffic monthly for your acco
 For most people, this is probably more than reasonable. 
 
 ## Future
-Split up commands so you can start a new VM + Nginx, and destroy it, independently of the video. Will probably either give the VM a static UUID name, or maybe a tag, so I don't have to track it.
-
-Provide instructions for streaming through VLC and Open Broadcast Software
+Provide instructions for streaming through [VLC](https://www.videolan.org/vlc/index.html) and [OBS](https://obsproject.com/)
 
 Optionally start up an HLS/Dash feed instead (or alongside?) RTMP, and I guess a webpage to go with it.
 
 FFMPEG can apparently take a url as input, so we might as well support that too (currently blocked because it checks if video is a valid file)
+
+Make the script installable.
+
+Add proper logging and loglevels
