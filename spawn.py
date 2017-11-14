@@ -25,7 +25,6 @@ def retry(testfn, maxtries, fn, _str, errstr):
     else:
         print("ERR: " + errstr)
         sys.exit()
-    sys.stdout.flush()
     return output
 
 @click.group()
@@ -53,23 +52,9 @@ def play_movie(filename, api_key, subs, snapshot):
     try:
         wait_for_nginx(ip)
 
-        ffmpeg_command = ['ffmpeg',
-                        '-re',
-                        '-loglevel', 'warning',
-                        '-i', filename,
-                        '-c:v', 'libx264',
-                        '-c:a', 'libmp3lame']
-        if subs:
-            ffmpeg_command += ['-filter:v', 'subtitles=' + filename]
+        if click.confirm('Start the stream now?'):
+            exec_ffmpeg(filename, ip, subs)
 
-        ffmpeg_command += [ '-ar', '44100',
-                            '-ac', '1',
-                            '-f', 'flv',
-                            'rtmp://%s/live' % ip]
-        print("Running command: " + ' '.join(ffmpeg_command))
-        print("The stream is now live at rtmp://%s/live" % ip)
-        print("Enjoy!")
-        subprocess.call(ffmpeg_command)
     except Exception as e:
         print(e)
     finally:
@@ -77,10 +62,45 @@ def play_movie(filename, api_key, subs, snapshot):
         destroy_server(api_key)
 
 
+@cli.command('play_movie')
+@click.argument('filename', type=click.Path(exists=True))
+@click.argument('ip_addr')
+@click.option('--subs', 'subs', flag_value=True, default=False, help="Whether or not subtitles are encoded in the movie. If they are, they'll be burned into the stream")
+def ffmpeg_command(filename, ip_addr, subs):
+    exec_ffmpeg(filename, ip_addr, subs)
+
 @cli.command('destroy_server')
 @click.option('--api-key', type=str, default=fetch_key, help="Digital Ocean API key; if not provided on CLI, it must be provided in the file API_KEY")
 def destroy(api_key):
     destroy_server(api_key)
+
+
+@cli.command('start_server')
+@click.option('--api-key', type=str, default=fetch_key, help="Digital Ocean API key; if not provided on CLI, it must be provided in the file API_KEY")
+def start_server(api_key):
+    print("Starting new server")
+    ip = spawn_newserver(api_key)
+    wait_for_nginx(ip)
+    print("Server is ready! Point an RTMP stream at rtmp://%s/live" % ip)
+
+def exec_ffmpeg(filename, ip, subs):
+    ffmpeg_command = ['ffmpeg',
+                    '-re',
+                    '-loglevel', 'warning',
+                    '-i', filename,
+                    '-c:v', 'libx264',
+                    '-c:a', 'libmp3lame']
+    if subs:
+        ffmpeg_command += ['-filter:v', 'subtitles=' + filename]
+
+    ffmpeg_command += [ '-ar', '44100',
+                        '-ac', '1',
+                        '-f', 'flv',
+                        'rtmp://%s/live' % ip]
+    print("Running command: " + ' '.join(ffmpeg_command))
+    print("The stream is now live at rtmp://%s/live" % ip)
+    print("Enjoy!")
+    subprocess.call(ffmpeg_command)
 
 def destroy_server(api_key):
     url = base_url + '/droplets?tag_name=' + tag
@@ -114,14 +134,6 @@ def wait_for_nginx(ip):
           "Nginx still hasn't started, something probably went wrong.")
         
 
-@cli.command('start_server')
-@click.option('--api-key', type=str, default=fetch_key, help="Digital Ocean API key; if not provided on CLI, it must be provided in the file API_KEY")
-def start_server(api_key):
-    print("Starting new server")
-    ip = spawn_newserver(api_key)
-    wait_for_nginx(ip)
-    print("Server is ready! Point an RTMP stream at rtmp://%s/live" % ip)
-
 def spawn_newserver(api_key):
     with open('deploy.sh', 'r') as f:
         script = ''.join(f.readlines())
@@ -129,7 +141,7 @@ def spawn_newserver(api_key):
         'name': 'StreamServer',
         'region': 'nyc3',
         'size': '512mb',
-        'image': '28892166',
+        'image': 29324370,
         'ssh_keys': None,
         'backups': False,
         'ipv6': False,
