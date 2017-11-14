@@ -52,8 +52,9 @@ def play_movie(filename, api_key, subs, snapshot):
     try:
         wait_for_nginx(ip)
 
-        if click.confirm('Start the stream now?'):
+        if click.confirm('Start the movie?'):
             exec_ffmpeg(filename, ip, subs)
+
 
     except Exception as e:
         print(e)
