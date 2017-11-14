@@ -2,15 +2,15 @@
 Host a live stream of a video for shared syncronized viewing, for 1 cent an hour, through digital ocean
 
 ## Requirements
-Requires python2.7
-
-Requires ffmpeg if you want the script to stream for you (The `play` command). Otherwise, [VLC](https://www.videolan.org/vlc/index.html) or [OBS](https://obsproject.com/) can be used instead (use `start_server` and `destroy_server` instead), though I've never personally tried them.
-
 Requires an account with digital ocean, and an [API KEY](https://www.digitalocean.com/community/tutorials/how-to-use-the-digitalocean-api-v2)
 
-ffmeg must be compiled with libass for subtitle conversion. Not necessary if you don't want subs.
+Requires python2.7
 
-View the stream with [VLC](https://www.videolan.org/vlc/index.html) or [MPV](https://mpv.io/). Requires **flash** to view the stream.
+Requires ffmpeg if you want the script to stream for you (The `play` command). Otherwise, programs such as [VLC](https://www.videolan.org/vlc/index.html) or [OBS](https://obsproject.com/) can be used instead to generate an RTMP stream (use commands `start_server` and `destroy_server` to deploy the server, and point the RTMP stream at the provided url).
+
+If subs are needed, then ffmpeg must be compiled with libass for subtitle conversion. Not necessary if you don't want subs.
+
+View the stream with any player that supports RTMP. [VLC](https://www.videolan.org/vlc/index.html) or [MPV](https://mpv.io/) are suggested. Requires **flash** to view the stream. 
 
 Only tested on OSX. Should work on any Linux box with no issues. 
 
@@ -89,10 +89,8 @@ $ python spawn.py destroy_server
 Attempt #1/3: Trying to kill VM with tag f48dff2e-7fb7-49e8-b9bf-2013c9deff90...
 ```
 
-
-
 ## Important Notes
-* If you cancel the script early, or something goes wrong, make sure to go to digitalocean.com and destroy the VM yourself (named StreamServer). The script **does not** ensure multiple servers are not created. Each server will cost you $5/monthly if you never close them.
+* If something goes wrong, make sure to go to digitalocean.com and destroy the VM yourself (named StreamServer), or call the `destroy_server` command. The script **does not** ensure multiple servers are not created. Each server will cost you $5/monthly if you never close them.
 * ffmpeg will be converting and streaming the video at the same time, in real time. If your computer converts slower than the bitrate of the video, you'll end up with a choppy stream. Consider converting the video beforehand in this case.
 * This uses the RTMP protocol, which communicates with Adobe Flash. Thus, you'll need flash installed to view the stream. 
 * The server is not secure in any fashion and makes no check as to **who** is streaming the video to the server. It also doesn't stop other people from streaming videos through your server. Such malicious users won't really cost you anything, except eating up some of your bandwidth cap.
@@ -107,22 +105,71 @@ Attempt #1/3: Trying to kill VM with tag f48dff2e-7fb7-49e8-b9bf-2013c9deff90...
   * ffmpeg will be converting and streaming the video at the same time, in real time. If your computer converts slower than the bitrate of the video, you'll end up with a choppy stream. Consider converting the video beforehand in this case.
 3. The video can then be viewed from the same url rtmp://`ip`/live
 4. When the video finishes, the script will destroy the VM.
-  * If you cancel the script early, or something goes wrong, make sure to go to digitalocean.com and destroy the VM yourself (named StreamServer). The script **does not** ensure multiple servers are not created. Each server will cost you $5/monthly if you never close them.
 
 This means that you have one input stream, from the local computer to the digital ocean vm, and `n` output streams for `n` viewers. 
 
-In testing, a 1.5 GB h264, mkv video converted to 750 MB. So with 10 viewers, I had a total traffic of (n + 1) * 750MB = (10 + 1) * 750 = 8250 MB = ~8GB network traffic.
+The command `play` will execute all of the above. `start_server` will only execute step 1, and `destroy_server` will only execute step 4. 
 
-Digital Ocean has a limit of 1 Terabyte of network traffic monthly for your account, which will restrict the total number of movies you can play monthly. According to other people, but I haven't tested myself, it has an upload speed of 330Mb/s, which will limit the number of viewers simultaneously. 
 
-For most people, this is probably more than reasonable. 
+## Calculations
+### Total Network Traffic
+Digital Ocean allows 1 TB of network traffic per month. The traffic of playing a single video:
+
+s = size of the video after conversion to flv
+
+n = number of viewers
+
+Total Bandwidth used = (n + 1) * s
+
+The +1 is from your computer streaming to the server. 
+
+In testing, a 1.5 GB h264 mkv video converted to 750 MB flv. So with 10 viewers, I had a total traffic of (n + 1) * 750MB = (10 + 1) * 750 = 8250 MB = ~8GB network traffic.
+
+### Bandwidth Per Second
+According to a [Digital Ocean Mod](https://www.digitalocean.com/community/questions/upload-and-download-speed-of-a-droplet), expected upload speed is 330 Mbps
+
+n = number of viewers
+
+max(n) = 330Mbps / video-bitrate
+
+My converted test movie had a bitrate of 1278 kb/s (`ffprobe test.flv`). So 330Mbps * 1024 = 337920 kb/s / 1278 kb/s = ~264 max number of viewers. Real network conditions will probably allow much less than that, and some claim Digital Ocean provides significantly lower upload speeds, so real usage may vary.
+
+### Cost per video
+[Digital Ocean](https://www.digitalocean.com/pricing/#droplet) charges $0.007 per hour of server uptime. 
+
+The cost of a 2 hour movie is 2 * $0.007 = $0.014
+
+The cost of a weekly 2 hour movie is 4 * $0.014 = $0.056
+
+When charged at the end of the month, it'll be rounded up, so $0.06, or 6 cents.
+
+### Bi-Weekly Movie, 30 viewers, 2 GB movie, 1300 kb/s bitrate
+
+Total Bandwidth Per Session = (n + 1) * s = 31 * 2GB = 62 GB
+
+Total Bandwidth Per Month = 62GB * 8 Sessions = 496 GB
+
+Upload Speed Required Per Session = (n + 1) users * bitrate = 31 * 1300kb/s = 40,300 kb/s = ~39 Mb/s
+
+Total cost = 2 hr/movie * 0.007 $/hr * 8 Sessions = $0.112 = $0.11 per month
+
+## Why Digital Ocean
+[AWS](https://aws.amazon.com/free/faqs/) only allows 15GB total network traffic per month on its free tier. Otherwise, its $0.09 per GB.
+
+[GCP](https://cloud.google.com/free/docs/always-free-usage-limits) only allows 1 GB outgoing traffic per day (~30GB/mo) on its free tier. Otherwise, $0.09 per GB
+
+[Microsoft Azure](https://azure.microsoft.com/en-us/pricing/details/bandwidth/?cdn=disable) allows 5GB free per month. Otherwise $0.09 per GB
+
+[Linode](https://www.linode.com/pricing) requires an up-front payment of min. $5 to use their service. Otherwise, pricing is comparable to Digital Ocean ($.0075/hr for the cheapest server, 1TB transfer, 1 Gbps upload).
+
+[Digital Ocean](https://www.digitalocean.com/pricing/#droplet) has no up-front cost, and $.007/hr pricing, 1 TB transfer, 330 Mbps upload.
 
 ## Future
 Provide instructions for streaming through [VLC](https://www.videolan.org/vlc/index.html) and [OBS](https://obsproject.com/)
 
 Optionally start up an HLS/Dash feed instead (or alongside?) RTMP, and I guess a webpage to go with it.
 
-FFMPEG can apparently take a url as input, so we might as well support that too (currently blocked because it checks if video is a valid file)
+FFMPEG can apparently take a url as input, so we might as well support that too (currently blocked because the script checks if video is a valid file)
 
 Only accept streams from ip address that ran this script, or from a list of given IP's.
 
