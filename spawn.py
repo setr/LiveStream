@@ -61,6 +61,7 @@ def play_movie(filename, api_key, subs, snapshot):
     finally:
         print("Destroying server and exiting")
         destroy_server(api_key)
+        print("Successfully destroyed the server")
 
 
 @cli.command('play_movie')
@@ -74,6 +75,7 @@ def ffmpeg_command(filename, ip_addr, subs):
 @click.option('--api-key', type=str, default=fetch_key, help="Digital Ocean API key; if not provided on CLI, it must be provided in the file API_KEY")
 def destroy(api_key):
     destroy_server(api_key)
+    print("Successfully destroyed the server")
 
 
 @cli.command('start_server')
