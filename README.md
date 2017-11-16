@@ -35,23 +35,24 @@ python spawn.py --help
 
 ## Usage
 ```
-Usage: spawn.py [OPTIONS] FILENAMEh
+Usage: spawn.py play [OPTIONS] FILENAME
 
 Options:
   --api-key TEXT   Digital Ocean API key; if not provided on CLI, it must be
                    provided in the file API_KEY
-  --subs           Whether or not subtitles are encoded in the movie. If they
-                   are, they'll be burned into the stream
+  --subs INTEGER   Select the subtitle stream embedded in the movie to be
+                   burned into the video stream.
   --snapshot TEXT  Name of snapshot image to use instead of creating a brand
-                   new VM [ NOT IMPLEMENTED ]
+                   new VM
+  --ffmpeg-logs    Hide the ffmpeg logs? Default is to hide them.
   --help           Show this message and exit.
 ```
 
 Examples:
 
-Start the Server, stream the movie, stop the server
+Start the Server, stream the movie, stop the server; Using the first subtitle stream in the movie
 ```
-$ python spawn.py play --subs ~/Downloads/KungFu/Police-Story-3-720p.mkv
+$ python spawn.py play --subs 0 ~/Downloads/KungFu/Police-Story-3-720p.mkv
 
 test% python spawn.py play --subs ~/Downloads/KungFu/Legend-of-the-Drunken-Master_720p.mkv
 Attempt #1/3: Starting up the VM...
@@ -84,7 +85,7 @@ Server is ready! Point an RTMP stream at rtmp://104.236.192.177/live
 
 Play the movie to an already running server
 ```
-$ python spawn.py play_movie ~/Downloads/KungFu/Police-Story-3-720p.mkv 45.55.141.12
+$ python spawn.py play_movie 45.55.141.12 ~/Downloads/KungFu/Police-Story-3-720p.mkv 
 Running command: ffmpeg -re -loglevel warning -i /Users/setr/Downloads/KungFu/Legend-of-the-Drunken-Master_720p.mkv -c:v libx264 -c:a libmp3lame -filter:v subtitles=/Users/setr/Downloads/KungFu/Legend-of-the-Drunken-Master_720p.mkv -ar 44100 -ac 1 -f flv rtmp://45.55.141.12/live
 
 The stream is now live at rtmp://45.55.141.12/live
@@ -103,9 +104,7 @@ Attempt #1/3: Trying to kill VM with tag f48dff2e-7fb7-49e8-b9bf-2013c9deff90...
 * ffmpeg will be converting and streaming the video at the same time, in real time. If your computer converts slower than the bitrate of the video, you'll end up with a choppy stream. Consider converting the video beforehand in this case.
 * This uses the RTMP protocol, which communicates with Adobe Flash. Thus, you'll need flash installed to view the stream. 
 * The server is not secure in any fashion and makes no check as to **who** is streaming the video to the server. It also doesn't stop other people from streaming videos through your server. Such malicious users won't really cost you anything, except eating up some of your bandwidth cap.
-* The subtitles flag will only pick the first subtitle embedded in the movie. 
-    * To play a different subtitle embedded in the movie, run the ffmpeg command but change the flag `-filter:v subtitles=video.mkv` to  `subtitles=video.mkv:si=1`. `si=1` will run the second subtitle stream, `si=2` runs the third, etc.
-    * To use a subtitle file instead, first convert the subtitle to ASS if it isn't already `ffmpeg -i subtitle.srt subtitle.ass`. The run the ffmpeg command but change the flag `-filter:v subtitles=[FILENAME]` to `-filter:v subtitles=subtitle.ass`
+* The subtitles flag only picks from a subtitle embedded in the video. To use an external subtitle file instead, first convert the subtitle to ASS if it isn't already `ffmpeg -i subtitle.srt subtitle.ass`. Then copy an run the ffmpeg command but change the flag `-filter:v subtitles=[FILENAME]` to `-filter:v subtitles=subtitle.ass`
 
 
 ## What it does
