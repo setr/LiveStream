@@ -35,9 +35,10 @@ def cli():
 @cli.command('play')
 @click.argument('filename', type=click.Path(exists=True))
 @click.option('--api-key', type=str, default=fetch_key, help="Digital Ocean API key; if not provided on CLI, it must be provided in the file API_KEY")
-@click.option('--subs', 'subs', flag_value=True, default=False, help="Whether or not subtitles are encoded in the movie. If they are, they'll be burned into the stream")
+@click.option('--subs', 'subs', default=-1, type=int, help="Select the subtitle stream embedded in the movie to be burned into the video stream.")
 @click.option('--snapshot', default=None, help='Name of snapshot image to use instead of creating a brand new VM')
-def play_movie(filename, api_key, subs, snapshot):
+@click.option('--ffmpeg-logs', flag_value=True, default=False, help="Hide the ffmpeg logs? Default is to hide them.")
+def play_movie(filename, api_key, subs, snapshot, ffmpeg_logs):
     FFMPEG_BIN = 'ffmpeg.exe' if os.name == 'nt' else 'ffmpeg'
 
     if snapshot:
@@ -53,7 +54,7 @@ def play_movie(filename, api_key, subs, snapshot):
         wait_for_nginx(ip)
 
         if click.confirm('Start the movie?'):
-            exec_ffmpeg(filename, ip, subs)
+            exec_ffmpeg(filename, ip, subs, ffmpeg_logs)
 
 
     except Exception as e:
@@ -65,11 +66,12 @@ def play_movie(filename, api_key, subs, snapshot):
 
 
 @cli.command('play_movie')
-@click.argument('filename', type=click.Path(exists=True))
 @click.argument('ip_addr')
-@click.option('--subs', 'subs', flag_value=True, default=False, help="Whether or not subtitles are encoded in the movie. If they are, they'll be burned into the stream")
-def ffmpeg_command(filename, ip_addr, subs):
-    exec_ffmpeg(filename, ip_addr, subs)
+@click.argument('filename', type=click.Path(exists=True))
+@click.option('--subs', 'subs', default=-1, type=int, help="Select the subtitle stream embedded in the movie to be burned into the video stream.")
+@click.option('--ffmpeg-logs', flag_value=True, default=False, help="Hide the ffmpeg logs? Default is to hide them.")
+def ffmpeg_command(filename, ip_addr, subs, ffmpeg_logs):
+    exec_ffmpeg(filename, ip_addr, subs, ffmpeg_logs)
 
 @cli.command('destroy_server')
 @click.option('--api-key', type=str, default=fetch_key, help="Digital Ocean API key; if not provided on CLI, it must be provided in the file API_KEY")
@@ -86,20 +88,22 @@ def start_server(api_key):
     wait_for_nginx(ip)
     print("Server is ready! Point an RTMP stream at rtmp://%s/live" % ip)
 
-def exec_ffmpeg(filename, ip, subs):
+def exec_ffmpeg(filename, ip, subs, logs):
     ffmpeg_command = ['ffmpeg',
-                    '-re',
-                    '-loglevel', 'warning',
-                    '-i', filename,
-                    '-c:v', 'libx264',
-                    '-c:a', 'libmp3lame']
-    if subs:
-        ffmpeg_command += ['-filter:v', 'subtitles=' + filename]
+                      '-re']
+    if logs:
+        ffmpeg_command += ['-loglevel', 'warning']
+
+    ffmpeg_command += [ '-i', filename,
+                       '-c:v', 'libx264',
+                       '-c:a', 'libmp3lame']
+    if subs >= 0:
+        ffmpeg_command += ['-filter:v', 'subtitles=' + filename + ':si=' + subs]
 
     ffmpeg_command += [ '-ar', '44100',
-                        '-ac', '1',
-                        '-f', 'flv',
-                        'rtmp://%s/live' % ip]
+                       '-ac', '1',
+                       '-f', 'flv',
+                       'rtmp://%s/live' % ip]
     print("Running command: " + ' '.join(ffmpeg_command))
     print("The stream is now live at rtmp://%s/live" % ip)
     print("Enjoy!")
