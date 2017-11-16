@@ -1,5 +1,5 @@
 # LiveStream
-Host a live stream of a video for shared syncronized viewing, for 1 cent an hour, through digital ocean
+Host a live stream of a video for shared syncronized viewing, for 1 cent an hour, through digital ocean and ffmpeg.
 
 ## Requirements
 Requires an account with digital ocean, and an [API KEY](https://www.digitalocean.com/community/tutorials/how-to-use-the-digitalocean-api-v2)
@@ -82,6 +82,15 @@ Attempt #7/20: Waiting for nginx to finish compiling...
 Server is ready! Point an RTMP stream at rtmp://104.236.192.177/live
 ```
 
+Play the movie to an already running server
+```
+$ python spawn.py play_movie ~/Downloads/KungFu/Police-Story-3-720p.mkv 45.55.141.12
+Running command: ffmpeg -re -loglevel warning -i /Users/setr/Downloads/KungFu/Legend-of-the-Drunken-Master_720p.mkv -c:v libx264 -c:a libmp3lame -filter:v subtitles=/Users/setr/Downloads/KungFu/Legend-of-the-Drunken-Master_720p.mkv -ar 44100 -ac 1 -f flv rtmp://45.55.141.12/live
+
+The stream is now live at rtmp://45.55.141.12/live
+Enjoy!
+```
+
 Destroy any running servers created by this script
 ```
 $ python spawn.py destroy_server
@@ -94,21 +103,25 @@ Attempt #1/3: Trying to kill VM with tag f48dff2e-7fb7-49e8-b9bf-2013c9deff90...
 * ffmpeg will be converting and streaming the video at the same time, in real time. If your computer converts slower than the bitrate of the video, you'll end up with a choppy stream. Consider converting the video beforehand in this case.
 * This uses the RTMP protocol, which communicates with Adobe Flash. Thus, you'll need flash installed to view the stream. 
 * The server is not secure in any fashion and makes no check as to **who** is streaming the video to the server. It also doesn't stop other people from streaming videos through your server. Such malicious users won't really cost you anything, except eating up some of your bandwidth cap.
+* The subtitles flag will only pick the first subtitle embedded in the movie. 
+    * To play a different subtitle embedded in the movie, run the ffmpeg command but change the flag `-filter:v subtitles=video.mkv` to  `subtitles=video.mkv:si=1`. `si=1` will run the second subtitle stream, `si=2` runs the third, etc.
+    * To use a subtitle file instead, first convert the subtitle to ASS if it isn't already `ffmpeg -i subtitle.srt subtitle.ass`. The run the ffmpeg command but change the flag `-filter:v subtitles=[FILENAME]` to `-filter:v subtitles=subtitle.ass`
+
 
 ## What it does
 
 1. Starts up a new Digital Ocean VM on the lowest tier (512MB), and runs deploy.sh 
-  * deploy.sh downloads Nginx and the RTMP module, and compiles it on the VM
-  * Nginx is used to run an rtmp server, on port 1935 (rtmp default)
+    * deploy.sh downloads Nginx and the RTMP module, and compiles it on the VM
+    * Nginx is used to run an rtmp server, on port 1935 (rtmp default)
 2. Once Nginx is running, the local machine uses ffmpeg to stream the video to rtmp://`ip`/live
-  * ffmpeg converts the video to h264, audio to mp3 and burns the subtitles into the output, wrapped in an flv container
-  * ffmpeg will be converting and streaming the video at the same time, in real time. If your computer converts slower than the bitrate of the video, you'll end up with a choppy stream. Consider converting the video beforehand in this case.
+    * ffmpeg converts the video to h264, audio to mp3 and burns the subtitles into the output, wrapped in an flv container
+    * ffmpeg will be converting and streaming the video at the same time, in real time. If your computer converts slower than the bitrate of the video, you'll end up with a choppy stream. Consider converting the video beforehand in this case.
 3. The video can then be viewed from the same url rtmp://`ip`/live
 4. When the video finishes, the script will destroy the VM.
 
 This means that you have one input stream, from the local computer to the digital ocean vm, and `n` output streams for `n` viewers. 
 
-The command `play` will execute all of the above. `start_server` will only execute step 1, and `destroy_server` will only execute step 4. 
+The command `play` will execute all of the above. `start_server` will only execute step 1, `play_movie` will only execute steps 2 and 3, and `destroy_server` will only execute step 4. 
 
 
 ## Calculations
@@ -154,20 +167,23 @@ Upload Speed Required Per Session = (n + 1) users * bitrate = 31 * 1300kb/s = 40
 Total cost = 2 hr/movie * 0.007 $/hr * 8 Sessions = $0.112 = $0.11 per month
 
 ## Why Digital Ocean
+[Digital Ocean](https://www.digitalocean.com/pricing/#droplet) has no up-front cost, and $.007/hr pricing, 1 TB transfer, 330 Mbps upload.
+
 [AWS](https://aws.amazon.com/free/faqs/) only allows 15GB total network traffic per month on its free tier. Otherwise, its $0.09 per GB.
 
 [GCP](https://cloud.google.com/free/docs/always-free-usage-limits) only allows 1 GB outgoing traffic per day (~30GB/mo) on its free tier. Otherwise, $0.09 per GB
 
-[Microsoft Azure](https://azure.microsoft.com/en-us/pricing/details/bandwidth/?cdn=disable) allows 5GB free per month. Otherwise $0.09 per GB
+[Microsoft Azure](https://azure.microsoft.com/en-us/pricing/details/bandwidth/?cdn=disable) allows 5GB total traffic free per month. Otherwise $0.09 per GB
 
 [Linode](https://www.linode.com/pricing) requires an up-front payment of min. $5 to use their service. Otherwise, pricing is comparable to Digital Ocean ($.0075/hr for the cheapest server, 1TB transfer, 1 Gbps upload).
 
-[Digital Ocean](https://www.digitalocean.com/pricing/#droplet) has no up-front cost, and $.007/hr pricing, 1 TB transfer, 330 Mbps upload.
+
 
 ## Future
 Provide instructions for streaming through [VLC](https://www.videolan.org/vlc/index.html) and [OBS](https://obsproject.com/)
 
 Optionally start up an HLS/Dash feed instead (or alongside?) RTMP, and I guess a webpage to go with it.
+    * Bitmovin, JWplayer have been suggested
 
 FFMPEG can apparently take a url as input, so we might as well support that too (currently blocked because the script checks if video is a valid file)
 
@@ -177,4 +193,4 @@ Maybe maintain a pre-compiled version of Nginx in this repo, to speed up deploym
 
 Make the script installable.
 
-Add proper logging and loglevels
+Add proper logging and loglevels.
