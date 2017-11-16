@@ -182,8 +182,7 @@ Total cost = 2 hr/movie * 0.007 $/hr * 8 Sessions = $0.112 = $0.11 per month
 ## Future
 Provide instructions for streaming through [VLC](https://www.videolan.org/vlc/index.html) and [OBS](https://obsproject.com/)
 
-Optionally start up an HLS/Dash feed instead (or alongside?) RTMP, and I guess a webpage to go with it.
-    * Bitmovin, JWplayer have been suggested
+Optionally start up an HLS/Dash feed instead (or alongside?) RTMP, and I guess a webpage to go with it. Bitmovin, JWplayer have been suggested for the web video player.
 
 FFMPEG can apparently take a url as input, so we might as well support that too (currently blocked because the script checks if video is a valid file)
 
