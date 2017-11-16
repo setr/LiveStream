@@ -125,7 +125,7 @@ def spawn_snapshot(api_key):
 def wait_for_nginx(ip):
     def fn():
         try:
-            code = requests.get("http://" + ip).status_code
+            code = requests.get("http://" + str(ip)).status_code
         except requests.exceptions.ConnectionError:
             code = 0
         time.sleep(20)
@@ -144,7 +144,7 @@ def spawn_newserver(api_key):
         'name': 'StreamServer',
         'region': 'nyc3',
         'size': '512mb',
-        'image': 29324370,
+        'image': 'ubuntu-17-10-x64',
         'ssh_keys': None,
         'backups': False,
         'ipv6': False,
